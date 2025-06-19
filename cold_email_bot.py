@@ -7,8 +7,17 @@ import pandas as pd
 import os
 import time
 
-# ✅ Proper client setup (new OpenAI SDK)
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# ✅ Debug: Check if the secret key is loaded
+try:
+    api_key = st.secrets["OPENAI_API_KEY"]
+    st.success("✅ API Key successfully loaded.")
+    st.write("🔐 API Key starts with:", api_key[:5])  # show only first few characters
+except Exception as e:
+    st.error("❌ Failed to load API Key from secrets. Please check your `.streamlit/secrets.toml` or Streamlit Cloud secret settings.")
+    st.stop()
+
+# ✅ Correct client setup
+client = OpenAI(api_key=api_key)
 
 st.set_page_config(page_title="Cold Email Platform", page_icon="📧")
 st.title("📧 Cold Email Generator & Sender")
