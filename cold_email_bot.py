@@ -6,8 +6,8 @@ from email.mime.multipart import MIMEMultipart
 import pandas as pd
 import os
 
-# Load secret key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# ✅ Correct OpenAI Client Setup (NEW SDK)
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 st.set_page_config(page_title="Cold Email Platform", page_icon="📧")
 st.title("📧 Cold Email Generator & Sender")
@@ -30,12 +30,12 @@ Target Audience: {audience}
 Tone: {tone}
 CTA: {cta}
 Keep it short and engaging."""
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = client.chat.completions.create(
+                model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=400
             )
-            email_text = response['choices'][0]['message']['content']
+            email_text = response.choices[0].message.content
             st.session_state.generated_email = email_text
 
         st.subheader("📩 Generated Email")
