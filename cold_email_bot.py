@@ -56,7 +56,8 @@ else:
             for i, row in df.iterrows():
                 subject = subject_template.format(**row)
                 body = body_template.format(**row)
-                st.markdown(f"**To:** {row[\"Email\"]}  \n**Subject:** {subject}  \n```\n{body}\n```")
+                st.markdown(f"**To:** {row['Email']}  \n**Subject:** {subject}")
+                st.code(body)
 
 # Sending section
 with st.expander("📤 Send Email"):
