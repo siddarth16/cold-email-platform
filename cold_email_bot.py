@@ -1,13 +1,14 @@
 import streamlit as st
-import openai
+from openai import OpenAI, RateLimitError
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import pandas as pd
 import os
+import time
 
-# ✅ Correct OpenAI Client Setup (NEW SDK)
-client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# ✅ Proper client setup (new OpenAI SDK)
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 st.set_page_config(page_title="Cold Email Platform", page_icon="📧")
 st.title("📧 Cold Email Generator & Sender")
@@ -30,13 +31,22 @@ Target Audience: {audience}
 Tone: {tone}
 CTA: {cta}
 Keep it short and engaging."""
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=400
-            )
-            email_text = response.choices[0].message.content
-            st.session_state.generated_email = email_text
+
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=400
+                )
+                email_text = response.choices[0].message.content
+                st.session_state.generated_email = email_text
+
+            except RateLimitError:
+                st.error("🚫 Rate limit exceeded. Please try again later.")
+                st.stop()
+            except Exception as e:
+                st.error(f"❌ Unexpected error: {e}")
+                st.stop()
 
         st.subheader("📩 Generated Email")
         st.text_area("Edit before sending", value=email_text, height=250, key="edited_email")
@@ -54,10 +64,13 @@ else:
         if st.button("Generate Emails"):
             st.subheader("📧 Personalized Drafts")
             for i, row in df.iterrows():
-                subject = subject_template.format(**row)
-                body = body_template.format(**row)
-                st.markdown(f"**To:** {row['Email']}  \n**Subject:** {subject}")
-                st.code(body)
+                try:
+                    subject = subject_template.format(**row)
+                    body = body_template.format(**row)
+                    st.markdown(f"**To:** {row['Email']}  \n**Subject:** {subject}")
+                    st.code(body)
+                except KeyError as e:
+                    st.error(f"Missing column: {e}")
 
 # Sending section
 with st.expander("📤 Send Email"):
